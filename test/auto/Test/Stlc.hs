@@ -54,10 +54,10 @@ typo =
     fresh ["x"] (e === evar x &&& call "lookupo" [env,x,typ]) |||
     fresh ["x","b","t0","t1"]
       (e === eabs x b &&& typ === arrow t0 t1 &&& call "typo" [cons x t0 env, b, t1]) |||
-    fresh ["a","b","t0","t"]
-      (e === eapp a b &&& call "typo" [env, a, arrow t0 t] &&& call "typo" [env, b, t0])
+    fresh ["a","b","t0"]
+      (e === eapp a b &&& call "typo" [env, a, arrow t0 typ] &&& call "typo" [env, b, t0])
   where
-    [env,e,typ,a,x,b,t,t0,t1] = map V ["env","e","typ","a","x","b","t","t0","t1"]
+    [env,e,typ,a,x,b,t0,t1] = map V ["env","e","typ","a","x","b","t0","t1"]
 
 
 env :: [Def]
@@ -81,5 +81,5 @@ runTest function filename goal = do
   else return ()
   createDirectoryIfMissing True path
   printTree (printf "%s/tree.dot" path) tree
-  system (printf "dot -O -Tpdf %s/*.dot" path)
+  system (printf "dot -O -Tpng %s/*.dot" path)
   return ()
