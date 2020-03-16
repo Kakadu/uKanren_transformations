@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase #-}
 
 module SymbolicExecution where
 
@@ -26,24 +27,24 @@ data SymTree = Fail
 topLevel :: Int -> Program -> SymTree
 topLevel depth (Program defs goal) =
     let gamma = E.updateDefsInGamma E.env0 defs in
-    let (logicGoal, gamma', names) = E.preEval gamma goal in
+    let (logicGoal, gamma', _) = E.preEval gamma goal in
     go logicGoal [] gamma' E.s0 depth
   where
+    go :: G S -> [G S] -> E.Gamma -> E.Sigma -> Int -> SymTree
     go goal ctx _ state d | d <= 1 = Prune (goal : ctx) state
-    go goal ctx env@(x, y, z) state depth =
+    go goal ctx env state depth =
       let (unified, gamma) = oneStep goal env state in
-      Disj (map (\(g, s') ->
-                  if null g
-                  then
-                    leaf s'
-                  else
-                    Conj [go (head g) (tail g) gamma s' (depth - 1)] g s'
+      Disj (map (\case
+                   ([],       s') -> leaf s'
+                   (g@(h:tl), s') -> Conj [go h tl gamma s' (depth - 1)] g s'
                 )
-                ((\(g, s) -> (g++ctx, s)) <$> unified))
+                ((\(g, s) -> (ctx++g, s)) <$> unified))
             (goal : ctx)
             state
 
-oneStep :: G S -> E.Gamma -> E.Sigma -> ([([G S], E.Sigma)], E.Gamma)
+type DNF = [([G S], E.Sigma)]
+
+oneStep :: G S -> E.Gamma -> E.Sigma -> (DNF, E.Gamma)
 oneStep goal env state =
     let (unfolded, gamma) = LC.oneStepUnfold goal env in
     let normalized = LC.normalize unfolded in
@@ -71,4 +72,3 @@ simplify =
       if Fail `elem` simplified
       then Fail
       else f simplified
-
