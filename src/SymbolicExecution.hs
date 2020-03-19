@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module SymbolicExecution where
 
@@ -9,6 +10,7 @@ import           Data.List          (find, intersect, partition, (\\))
 import qualified Data.Map.Strict    as M
 import           Data.Maybe         (mapMaybe, fromMaybe)
 import           Debug.Trace        (trace)
+import           Control.Exception  (assert)
 import           Embed
 import qualified Eval               as E
 import           Generalization     (generalizeGoals, generalizeSplit)
@@ -23,6 +25,24 @@ data SymTree = Fail
              | Conj [SymTree] [G S] E.Sigma
              | Prune [G S] E.Sigma
              deriving (Show, Eq)
+
+data WhistleInfo = NoAnswers | HasAnswers
+
+evalTree root = helper [] root
+  where
+    helper _ Fail = NoAnswers
+    helper _ (Prune _ _)   = HasAnswers
+    helper _ (Success _)   = HasAnswers
+    helper path (Conj [t] [g] _) | whistles g path = NoAnswers
+    helper path (Conj [t] [g] _)                   = helper (g:path) t
+
+    helper path (Disj ts  gs _)  =
+      assert (length ts == length gs) $
+      foldl (\case HasAnswers -> const HasAnswers; _ -> id) NoAnswers $
+      zipWith (\t g -> if whistles g path then NoAnswers else helper (g:path) t) ts gs
+    whistles goal path = False
+
+
 
 topLevel :: Int -> Program -> SymTree
 topLevel depth (Program defs goal) =
