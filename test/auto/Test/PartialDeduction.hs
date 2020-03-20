@@ -1,6 +1,6 @@
 module Test.PartialDeduction where
 
-import           Test.Helper (test, test2, manyAssert) 
+import           Test.Helper (test, test2)
 
 import qualified PartialDeduction as PD
 import           Printer.Dot

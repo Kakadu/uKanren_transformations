@@ -4,15 +4,10 @@
 
 module Test.OddEven where
 
-import           Test.Helper (test, test2, manyAssert)
-
 import           Prelude hiding (succ,odd,even)
 import           SymbolicExecution (topLevel)
 import           Printer.Dot
-import           Printer.SymTree
-import           Program.List     (nil, revAcco, reverso, (%))
-import           Program.Programs (doubleAppendo)
-import qualified Program.Prop
+import           Printer.SymTree ()
 import           Syntax
 import           System.Directory
 import           System.Process   (system)
@@ -65,13 +60,14 @@ unit_oddEven = do
   return ()
 
 runTest function filename goal = do
-  let tree = function goal
   let path = printf "test/out/sym/%s" filename
   exists <- doesDirectoryExist path
   if exists
   then removeDirectoryRecursive path
   else return ()
   createDirectoryIfMissing True path
+
+  tree <- function goal
   printTree (printf "%s/tree.dot" path) tree
   system (printf "dot -O -Tpdf %s/*.dot" path)
   return ()

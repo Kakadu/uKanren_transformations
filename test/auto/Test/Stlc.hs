@@ -73,13 +73,14 @@ unit_stlc1 = do
   return ()
 
 runTest function filename goal = do
-  let tree = function goal
   let path = printf "test/out/sym/%s" filename
   exists <- doesDirectoryExist path
   if exists
   then removeDirectoryRecursive path
   else return ()
   createDirectoryIfMissing True path
+
+  tree <- function goal
   printTree (printf "%s/tree.dot" path) tree
   system (printf "dot -O -Tpng %s/*.dot" path)
   return ()

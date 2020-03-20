@@ -15,10 +15,6 @@ import           Generalization
 import           Prelude            hiding (lookup, showList)
 import           Syntax
 import           Text.Printf
-import           Util.Miscellaneous
-
--- trace :: String -> a -> a
--- trace _ x = x
 
 data Descend a = Descend { getCurr :: a, getAncs :: [a] } deriving (Eq)
 
